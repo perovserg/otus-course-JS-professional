@@ -22,8 +22,8 @@ const fs =require('fs');
 
 const megaByte = 1000000;
 
-// const unsortedFileSize = 0.1; // in Mb
-// const chunkSize = 0.01; // in Mb
+// const unsortedFileSize = 1; // in Mb
+// const chunkSize = 0.1; // in Mb
 // const highWaterMark = 1024; // in bytes
 
 const unsortedFileSize = 100; // in Mb
@@ -75,17 +75,30 @@ const getChunkFileNameGetter = (chunkDir, chunkPrefix) => (fileNameCount) => {
     return path.join(chunkDir, `${chunkPrefix}${fileNameCount}.txt`);
 };
 
+const getMainAndTail = (str, prevTail) => {
+    const lastIndex = str.lastIndexOf(' ');
+    if (lastIndex === -1) {
+        return { main: str, tail: '' };
+    }
+    const main = prevTail + str.slice(0, lastIndex);
+    const tail = str.slice(lastIndex + 1);
+    return { main, tail };
+};
+
 const readSplitSort = (unsortedFilePath, chunkDir, chunkPrefix) => {
     checkChunkDir(chunkDir);
     return new Promise((resolve) => {
         let fileNameCount = 1;
         const readStream = fs.createReadStream(unsortedFilePath, { highWaterMark });
         let bufferString = '';
+        let prevTail = '';
         const getChunkFileName = getChunkFileNameGetter(chunkDir, chunkPrefix);
         readStream.on('data', (chunk) => {
             const sizeInBytes = Buffer.byteLength(bufferString, 'utf8');
             if (sizeInBytes > chunkSize * megaByte) {
-                sortAndWriteToFile(bufferString.toString(), getChunkFileName(fileNameCount));
+                const { main, tail } = getMainAndTail(bufferString.toString(), prevTail);
+                prevTail = tail;
+                sortAndWriteToFile(main, getChunkFileName(fileNameCount));
                 fileNameCount++;
                 bufferString = chunk;
             } else {
@@ -93,7 +106,9 @@ const readSplitSort = (unsortedFilePath, chunkDir, chunkPrefix) => {
             }
         });
         readStream.on('end', () => {
-            sortAndWriteToFile(bufferString.toString(), getChunkFileName(fileNameCount));
+            const { main, tail } = getMainAndTail(bufferString.toString(), prevTail);
+            prevTail = tail;
+            sortAndWriteToFile(main, getChunkFileName(fileNameCount));
             bufferString = '';
             resolve();
         });
