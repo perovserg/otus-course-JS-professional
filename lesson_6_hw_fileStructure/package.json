@@ -1,0 +1,15 @@
+{
+  "name": "lesson_6_hw_file_structure",
+  "version": "1.0.0",
+  "description": "",
+  "main": "tree.js",
+  "scripts": {
+    "tree": "node tree.js"
+  },
+  "keywords": [],
+  "author": "Перов Сергей Григорьевич",
+  "license": "ISC",
+  "dependencies": {
+    "minimist": "^1.2.5"
+  }
+}
