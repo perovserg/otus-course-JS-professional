@@ -10,7 +10,7 @@ const getPath = (node, selector = '') => {
         && parentNode.localName !== undefined // document parent for html
         && parentNode.localName !== 'html'
     ) {
-        selector = this.getPath(parentNode, selector).concat(' ')
+        selector = getPath(parentNode, selector).concat(' ')
     }
 
     selector = selector.concat(node.localName)
